@@ -15,7 +15,7 @@ class IngredientService:
             ingredient = self.ingredient_repo.get_by_name(item.name)
 
             if not ingredient:
-                ingredient = Ingredient(name=item.name, id=uuid.uuid4())
+                ingredient = Ingredient(name=item.name, uuid=uuid.uuid4())
                 self.ingredient_repo.add(ingredient)
 
             recipe_ingredients.append(

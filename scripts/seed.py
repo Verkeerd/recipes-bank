@@ -26,17 +26,17 @@ def seed_db():
         user1._account = account1
 
         flour = Ingredient(
-            id=uuid.uuid4(),
+            uuid=uuid.uuid4(),
             name="Flour",
         )
 
         egg = Ingredient(
-            id=uuid.uuid4(),
+            uuid=uuid.uuid4(),
             name="Egg",
         )
 
         milk = Ingredient(
-            id=uuid.uuid4(),
+            uuid=uuid.uuid4(),
             name="Milk",
         )
 

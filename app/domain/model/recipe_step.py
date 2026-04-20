@@ -12,6 +12,6 @@ class RecipeStep(Base):
     id = sa.Column(UUID(as_uuid=True), primary_key=True, index=True)
     recipe_id = sa.Column(UUID(as_uuid=True), sa.ForeignKey("recipe.id"))
     step_number = sa.Column(sa.Integer, nullable=False)
-    description = sa.Column(sa.Text, nullable=False)
+    description = sa.Column(sa.Text(5000), nullable=False)
 
     recipe = relationship("Recipe", back_populates="steps")

@@ -3,8 +3,8 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class IngredientSchema(BaseModel):
     """"""
-    name: str
+    name: str = Field(max_length=50)
     amount: float = Field(gt=0)
-    unit: str
+    unit: str = Field(max_length=50)
 
     model_config = ConfigDict(from_attributes=True)

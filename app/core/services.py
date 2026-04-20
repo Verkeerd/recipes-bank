@@ -22,5 +22,5 @@ class Services:
 
         self.ingredient_service = IngredientService(ingredient_repo)
 
-        self.recipe = RecipeService(recipe_repo, ingredient_repo, ingredient_service=self.ingredient_service)
+        self.recipe = RecipeService(recipe_repo, ingredient_service=self.ingredient_service)
         self.auth = AuthService(user_repo)

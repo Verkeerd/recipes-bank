@@ -1,17 +1,15 @@
 import uuid
 
-from app.domain.model import RecipeIngredient, RecipeStep, Recipe, Ingredient
+from app.domain.model import RecipeStep, Recipe
 from app.domain.schema import RecipeRequest, RecipeUpdate
 from app.repository.recipe_repository import RecipeRepository
-from app.repository.ingredient_repository import IngredientRepository
 from app.service.ingredient_service import IngredientService
 
 
 class RecipeService:
 
-    def __init__(self, recipe_repo: RecipeRepository, ingredient_repo: IngredientRepository, ingredient_service : IngredientService):
+    def __init__(self, recipe_repo: RecipeRepository, ingredient_service : IngredientService):
         self.recipe_repo = recipe_repo
-        self.ingredient_repo = ingredient_repo
         self.ingredient_service = ingredient_service
 
     def create_recipe(self, data: RecipeRequest):
@@ -42,7 +40,7 @@ class RecipeService:
             RecipeStep(
                 id=uuid.uuid4(),
                 step_number=i + 1,
-                description=step
+                description=step.description,
             )
             for i, step in enumerate(steps)
         ]
@@ -53,17 +51,20 @@ class RecipeService:
         if not recipe:
             return None
 
-        if data.name:
+        if isinstance(data.name, str):
             recipe.name = data.name
 
-        if data.ingredients:
+        if isinstance(data.ingredients, list):
             recipe.recipe_ingredients = self.ingredient_service.add_ingredients(data.ingredients)
 
-        if data.steps:
+        if isinstance(data.steps, list):
             recipe.steps = self.number_recipe_steps(data.steps)
 
-        if data.vegetarian:
+        if isinstance(data.vegetarian, bool):
             recipe.vegetarian = data.vegetarian
+
+        if isinstance(data.servings, int):
+            recipe.servings = data.servings
 
         self.recipe_repo.db.commit()
         return self.recipe_repo.refresh(recipe)

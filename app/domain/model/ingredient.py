@@ -17,6 +17,6 @@ class Ingredient(Base):
         back_populates="ingredient"
     )
 
-    def __init__(self, name, id):
+    def __init__(self, name, uuid=None):
         self.name = name
-        self.id = id
+        self.id = uuid
