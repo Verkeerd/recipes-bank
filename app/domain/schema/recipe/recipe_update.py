@@ -7,6 +7,7 @@ from app.domain.schema.step_schema import StepRequest
 
 class RecipeUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=50)
+    description: Optional[str] = Field(default=None, min_length=1, max_length=256)
     ingredients: Optional[list[IngredientSchema]] = None
     steps: Optional[list[StepRequest]] = None
     vegetarian: Optional[bool] = None
@@ -16,6 +17,7 @@ class RecipeUpdate(BaseModel):
         json_schema_extra={
             "example": {
                 "name": "Updated Pasta",
+                "description": "Simple pasta recipe.",
                 "ingredients": [
                     {
                         "name": "pasta",

@@ -1,7 +1,9 @@
 import uuid
 
+
 from app.domain.model import RecipeStep, Recipe
 from app.domain.schema import RecipeRequest, RecipeUpdate
+from app.domain.schema.recipe import recipe_query
 from app.repository.recipe_repository import RecipeRepository
 from app.service.ingredient_service import IngredientService
 
@@ -54,6 +56,9 @@ class RecipeService:
         if isinstance(data.name, str):
             recipe.name = data.name
 
+        if isinstance(data.description, str):
+            recipe.description = data.description
+
         if isinstance(data.ingredients, list):
             recipe.recipe_ingredients = self.ingredient_service.add_ingredients(data.ingredients)
 
@@ -85,3 +90,6 @@ class RecipeService:
         self.recipe_repo.db.commit()
 
         return True
+
+    def query_recipe(self, request: recipe_query.RecipeQuery):
+        return self.recipe_repo.build_query(request).all()

@@ -30,13 +30,15 @@ def service(repo, ingredient_service):
 
 def build_update(
     name=None,
+    description=None,
     ingredients=None,
     steps=None,
     vegetarian=None,
-    servings=None,
+    servings=None
 ):
     data = MagicMock()
     data.name = name
+    data.description = description
     data.ingredients = ingredients
     data.steps = steps
     data.vegetarian = vegetarian
@@ -152,6 +154,7 @@ def test_update_recipe_full_update(service, repo, ingredient_service):
         ("name", "new name"),
         ("vegetarian", True),
         ("servings", 5),
+        ("description", "new description"),
     ],
 )
 def test_update_recipe_single_fields(service, repo, field, value):

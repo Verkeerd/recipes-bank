@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.controller.recipe_controller import recipe_router
-from app.core.dependencies import get_services
+from app.core.service_factory import get_services
 
 class FakeRecipeService:
     def __init__(self):

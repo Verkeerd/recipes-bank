@@ -1,10 +1,14 @@
+import uuid
+
 from pydantic import BaseModel, ConfigDict
 
 from app.domain.schema import IngredientSchema, StepSchema
 
 
 class RecipeResponse(BaseModel):
+    id: uuid.UUID
     name: str
+    description: str
     ingredients: list[IngredientSchema]
     steps: list[StepSchema]
     vegetarian: bool
@@ -15,7 +19,9 @@ class RecipeResponse(BaseModel):
     @classmethod
     def from_orm_recipe(cls, recipe):
         return cls(
+            id=recipe.id,
             name=recipe.name,
+            description=recipe.description,
             vegetarian=recipe.vegetarian,
             servings=recipe.servings,
             ingredients=[

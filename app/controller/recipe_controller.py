@@ -1,12 +1,13 @@
+import pprint
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.core.dependencies import get_services
 from app.core.services import Services
+from app.core.service_factory import get_services
 
 from app.domain.schema import RecipeRequest, RecipeUpdate, RecipeResponse
-
+from app.domain.schema.recipe.recipe_query import RecipeQuery
 
 recipe_router = APIRouter(prefix="/recipe", tags=["Recipes"])
 
@@ -58,3 +59,15 @@ def delete_recipe(
         raise HTTPException(status_code=404, detail="Recipe not found")
 
     return {"message": "Recipe deleted successfully"}
+
+@recipe_router.post("/query", response_model=list[RecipeResponse])
+def update_recipe(
+    request: RecipeQuery,
+    services: Services = Depends(get_services),
+):
+    fetched = services.recipe.query_recipe(request)
+
+    if not fetched:
+        raise HTTPException(status_code=404, detail="No recipes with the given filters found")
+
+    return [RecipeResponse.from_orm_recipe(recipe) for recipe in fetched]
