@@ -107,6 +107,9 @@ Authentication lays the groundwork for **auditability**:
 * Enables logging and monitoring of suspicious behavior
 * Important for handling unexpected or malicious data changes
 
+---
+
+---
 
 # Running the Project
 
@@ -253,9 +256,15 @@ uvicorn app.main:app --reload
 
 ---
 
-# Authentication
+---
 
-## Create user
+# API DESIGN:
+
+Start the project and see 127.0.0.1:8000/docs for OpenApi documentation.
+
+## Authentication
+
+### Create user
 
 ```http
 POST /auth/create
@@ -274,7 +283,7 @@ Example body:
 
 ---
 
-## Login
+### Login
 
 ```http
 POST /auth/login
@@ -298,7 +307,7 @@ Response:
 
 ---
 
-## Auth required endpoints
+### Auth required endpoints
 
 Use:
 
@@ -314,9 +323,9 @@ Protected routes:
 
 ---
 
-# Recipe Endpoints
+## Recipe Endpoints
 
-## Get all recipes
+### Get all recipes
 
 ```http
 GET /recipe/
@@ -324,7 +333,7 @@ GET /recipe/
 
 ---
 
-## Create recipe (auth required)
+### Create recipe (auth required)
 
 ```http
 POST /recipe/
@@ -332,7 +341,7 @@ POST /recipe/
 
 ---
 
-## Get recipe by id
+### Get recipe by id
 
 ```http
 GET /recipe/{recipe_id}
@@ -340,7 +349,7 @@ GET /recipe/{recipe_id}
 
 ---
 
-## Update recipe (auth required)
+### Update recipe (auth required)
 
 ```http
 PUT /recipe/{recipe_id}
@@ -348,7 +357,7 @@ PUT /recipe/{recipe_id}
 
 ---
 
-## Delete recipe (auth required)
+### Delete recipe (auth required)
 
 ```http
 DELETE /recipe/{recipe_id}
@@ -356,7 +365,7 @@ DELETE /recipe/{recipe_id}
 
 ---
 
-## Query recipes
+### Query recipes
 
 ```http
 POST /recipe/query
@@ -424,15 +433,15 @@ alembic revision --autogenerate -m "message"
 
 ---
 
-# 🔧 Environment Variables
+# Environment Variables
 
-| Variable         | Description                  |
-|------------------|------------------------------|
-| DB_USER          | Postgres user                |
-| DB_PASSWORD      | Postgres password            |
-| DB_NAME          | Database name                |
-| DATABASE_URL     | SQLAlchemy connection string |
-| SECRET_AUT_TOKEN | Used for jwt generation      |
+| Variable          | Description                  |
+|-------------------|------------------------------|
+| DB_USER           | Postgres user                |
+| DB_PASSWORD       | Postgres password            |
+| DB_NAME           | Database name                |
+| DATABASE_URL      | SQLAlchemy connection string |
+| SECRET_AUTH_TOKEN | Used for jwt generation      |
 
 ---
 
@@ -440,14 +449,13 @@ alembic revision --autogenerate -m "message"
 
 # Suggested Improvements
 
+* Add controller advice
 * Add keycloak
-* Add Redis caching
-* Add Search through ElasticSearch
 * Add refresh tokens
 * Add role-based access (admin/user)
 * Add pagination to recipe endpoints
 * Add OpenTelemetry logging
-* Move secrets to Docker secrets / Vault
 * Add CI pipeline
+* Improve search using precomputed search vectors (PostgreSQL full-text search or Elasticsearch)
 
 ---
