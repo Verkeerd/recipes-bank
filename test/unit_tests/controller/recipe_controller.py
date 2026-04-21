@@ -6,7 +6,13 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.controller.recipe_controller import recipe_router
+from app.core.auth import get_current_user
 from app.core.service_factory import get_services
+
+
+def fake_user():
+    return MagicMock(id=uuid.uuid4(), username="testuser")
+
 
 class FakeRecipeService:
     def __init__(self):
@@ -15,6 +21,7 @@ class FakeRecipeService:
         self.get_recipe = MagicMock()
         self.update_recipe = MagicMock()
         self.delete_recipe = MagicMock()
+        self.query_recipe = MagicMock()
 
 
 class FakeServices:
@@ -22,14 +29,16 @@ class FakeServices:
         self.recipe = FakeRecipeService()
 
 def create_pasta_recipe():
-    recipe1 = MagicMock()
-    recipe1.name = "Pasta"
-    recipe1.vegetarian = True
-    recipe1.servings = 2
-    recipe1.recipe_ingredients = []
-    recipe1.steps = []
+    recipe = MagicMock()
+    recipe.id = uuid.uuid4()
+    recipe.name = "Pasta"
+    recipe.description = "Simple pasta recipe"
+    recipe.vegetarian = True
+    recipe.servings = 2
+    recipe.recipe_ingredients = []
+    recipe.steps = []
 
-    return recipe1
+    return recipe
 
 @pytest.fixture
 def client():
@@ -41,7 +50,11 @@ def client():
     def override_get_services():
         return fake_services
 
+    def override_get_current_user():
+        return fake_user()
+
     app.dependency_overrides[get_services] = override_get_services
+    app.dependency_overrides[get_current_user] = override_get_current_user
 
     return TestClient(app), fake_services
 
@@ -51,7 +64,9 @@ def test_get_recipes(client):
     recipe1 = create_pasta_recipe()
 
     recipe2 = MagicMock()
+    recipe2.id = uuid.uuid4()
     recipe2.name = "Soup"
+    recipe2.description = "Flavorful Soup"
     recipe2.vegetarian = False
     recipe2.servings = 1
     recipe2.recipe_ingredients = []
@@ -158,3 +173,95 @@ def test_delete_recipe_not_found(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Recipe not found"
+
+
+def test_query_recipes_success(client):
+    client, services = client
+
+    recipe1 = create_pasta_recipe()
+    recipe2 = create_pasta_recipe()
+    recipe2.name = "Soup"
+
+    services.recipe.query_recipe.return_value = [recipe1, recipe2]
+
+    response = client.post(
+        "/recipe/query",
+        json={
+            "description_include": None,
+            "description_exclude": None,
+            "ingredients_include": None,
+            "ingredients_exclude": None,
+            "vegetarian": None,
+            "servings": None,
+        },
+    )
+
+    assert response.status_code == 200
+    services.recipe.query_recipe.assert_called_once()
+
+
+def test_query_recipes_not_found(client):
+    client, services = client
+    services.recipe.query_recipe.return_value = []
+
+    response = client.post(
+        "/recipe/query",
+        json={
+            "description_include": None,
+            "description_exclude": None,
+            "ingredients_include": None,
+            "ingredients_exclude": None,
+            "vegetarian": None,
+            "servings": None,
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No recipes with the given filters found"
+
+
+def test_query_recipes_passes_request_to_service(client):
+    client, services = client
+
+    services.recipe.query_recipe.return_value = [create_pasta_recipe()]
+
+    payload = {
+        "description_include": ["boil"],
+        "description_exclude": None,
+        "ingredients_include": ["salt"],
+        "ingredients_exclude": None,
+        "vegetarian": True,
+        "servings": 2,
+    }
+
+    response = client.post("/recipe/query", json=payload)
+
+    assert response.status_code == 200
+
+    # ensure request object was passed
+    args, _ = services.recipe.query_recipe.call_args
+    request = args[0]
+
+    assert request.vegetarian is True
+    assert request.servings == 2
+
+def test_query_recipes_does_not_modify_response(client):
+    client, services = client
+
+    recipe = create_pasta_recipe()
+    services.recipe.query_recipe.return_value = [recipe]
+
+    response = client.post(
+        "/recipe/query",
+        json={
+            "description_include": None,
+            "description_exclude": None,
+            "ingredients_include": None,
+            "ingredients_exclude": None,
+            "vegetarian": None,
+            "servings": None,
+        },
+    )
+
+    assert response.status_code == 200
+    services.recipe.query_recipe.assert_called_once()

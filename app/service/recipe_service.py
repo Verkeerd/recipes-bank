@@ -36,8 +36,8 @@ class RecipeService:
         self.recipe_repo.db.commit()
         return self.recipe_repo.refresh(recipe)
 
-
-    def number_recipe_steps(self, steps):
+    @staticmethod
+    def number_recipe_steps(steps):
         return [
             RecipeStep(
                 id=uuid.uuid4(),

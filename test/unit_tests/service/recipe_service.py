@@ -294,3 +294,64 @@ def test_delete_recipe_not_found(service, repo):
     assert result is False
     repo.delete.assert_not_called()
     repo.db.commit.assert_not_called()
+
+def test_query_recipe_executes_build_query_and_returns_all(service, repo):
+    # Arrange
+    request = MagicMock()
+
+    mock_query = MagicMock()
+    repo.build_query.return_value = mock_query
+    mock_query.all.return_value = ["recipe1", "recipe2"]
+
+    # Act
+    result = service.query_recipe(request)
+
+    # Assert
+    repo.build_query.assert_called_once_with(request)
+    mock_query.all.assert_called_once()
+    assert result == ["recipe1", "recipe2"]
+
+def test_query_recipe_returns_empty_list(service, repo):
+    # Arrange
+    request = MagicMock()
+
+    mock_query = MagicMock()
+    repo.build_query.return_value = mock_query
+    mock_query.all.return_value = []
+
+    # Act
+    result = service.query_recipe(request)
+
+    # Assert
+    mock_query.all.assert_called_once()
+    assert result == []
+
+def test_query_recipe_passes_request_unchanged(service, repo):
+    # Arrange
+    request = MagicMock()
+
+    mock_query = MagicMock()
+    repo.build_query.return_value = mock_query
+    mock_query.all.return_value = []
+
+    # Act
+    service.query_recipe(request)
+
+    # Assert
+    repo.build_query.assert_called_once_with(request)
+
+def test_query_recipe_does_not_modify_query(service, repo):
+    # Arrange
+    request = MagicMock()
+
+    mock_query = MagicMock()
+    repo.build_query.return_value = mock_query
+    mock_query.all.return_value = ["r1"]
+
+    # Act
+    service.query_recipe(request)
+
+    # Assert
+    mock_query.all.assert_called_once()
+    repo.db.commit.assert_not_called()
+    repo.delete.assert_not_called()

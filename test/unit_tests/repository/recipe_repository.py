@@ -106,3 +106,134 @@ def test_refresh_calls_session_refresh_and_returns_entity(repository, db_session
     # Assert
     db_session.refresh.assert_called_once_with(entity)
     assert result == entity
+
+
+def test_apply_vegetarian_filter_applies_true_filter():
+    query = MagicMock()
+    filtered_query = MagicMock()
+    query.filter.return_value = filtered_query
+
+    result = RecipeRepository.apply_vegetarian_filter(query, True)
+
+    query.filter.assert_called_once()
+    assert result == filtered_query
+
+
+def test_apply_vegetarian_filter_with_none_does_not_fail():
+    query = MagicMock()
+
+    result = RecipeRepository.apply_vegetarian_filter(query, None)
+
+    assert result == query
+
+
+def test_apply_servings_filter_applies_when_value_present():
+    query = MagicMock()
+    filtered_query = MagicMock()
+    query.filter.return_value = filtered_query
+
+    result = RecipeRepository.apply_servings_filter(query, 4)
+
+    query.filter.assert_called_once()
+    assert result == filtered_query
+
+
+def test_apply_servings_filter_skips_when_none():
+    query = MagicMock()
+
+    result = RecipeRepository.apply_servings_filter(query, None)
+
+    assert result == query
+
+def test_apply_ingredient_filters_no_terms_returns_query():
+    query = MagicMock()
+
+    result = RecipeRepository.apply_ingredient_filters(query)
+
+    assert result == query
+    query.join.assert_not_called()
+
+def test_apply_ingredient_filters_with_include_terms_builds_filter():
+    query = MagicMock()
+    joined = MagicMock()
+    filtered = MagicMock()
+
+    query.join.return_value = joined
+    joined.join.return_value = joined
+    joined.filter.return_value = filtered
+
+    result = RecipeRepository.apply_ingredient_filters(
+        query,
+        include_terms=["tomato", "cheese"]
+    )
+
+    query.join.assert_called()
+    joined.filter.assert_called()
+    assert result == filtered
+
+def test_apply_ingredient_filters_with_exclude_terms():
+    query = MagicMock()
+    joined = MagicMock()
+    filtered = MagicMock()
+
+    query.join.return_value = joined
+    joined.join.return_value = joined
+    joined.filter.return_value = filtered
+
+    result = RecipeRepository.apply_ingredient_filters(
+        query,
+        exclude_terms=["nuts"]
+    )
+
+    joined.filter.assert_called()
+    assert result == filtered
+
+def test_apply_step_filters_with_include_terms():
+    query = MagicMock()
+    filtered = MagicMock()
+    query.filter.return_value = filtered
+
+    result = RecipeRepository.apply_step_filters(
+        query,
+        include_terms=["boil", "fry"]
+    )
+
+    query.filter.assert_called()
+    assert result == filtered
+
+def test_apply_step_filters_with_exclude_terms():
+    query = MagicMock()
+    filtered = MagicMock()
+    query.filter.return_value = filtered
+
+    result = RecipeRepository.apply_step_filters(
+        query,
+        exclude_terms=["burnt"]
+    )
+
+    query.filter.assert_called()
+    assert result == filtered
+
+def test_build_query_applies_all_filters(repository, db_session):
+    request = MagicMock()
+    request.description_include = ["boil"]
+    request.description_exclude = ["burnt"]
+    request.ingredients_include = ["egg"]
+    request.ingredients_exclude = ["milk"]
+    request.vegetarian = True
+    request.servings = 2
+
+    base_query = MagicMock()
+    db_session.query.return_value = base_query
+    base_query.distinct.return_value = base_query
+
+    # chain mocks for filter methods
+    base_query.filter.return_value = base_query
+    base_query.join.return_value = base_query
+
+    result = repository.build_query(request)
+
+    db_session.query.assert_called_once_with(Recipe)
+    base_query.distinct.assert_called_once()
+
+    assert result == base_query

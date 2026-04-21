@@ -35,7 +35,9 @@ class RecipeRepository:
 
     @staticmethod
     def apply_vegetarian_filter(query, vegetarian: bool | None):
-        return query.filter(Recipe.vegetarian.is_(vegetarian))
+        if vegetarian is not None:
+            return query.filter(Recipe.vegetarian.is_(vegetarian))
+        return query
 
     @staticmethod
     def apply_servings_filter(query, servings: int | None):
@@ -117,11 +119,9 @@ class RecipeRepository:
             request.ingredients_exclude
             )
 
-        if isinstance(request.vegetarian, bool):
-            query = self.apply_vegetarian_filter(query, request.vegetarian)
+        query = self.apply_vegetarian_filter(query, request.vegetarian)
 
-        if request.servings:
-            query = self.apply_servings_filter(query, request.servings)
+        query = self.apply_servings_filter(query, request.servings)
 
         return query
 

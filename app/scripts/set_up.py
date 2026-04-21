@@ -1,7 +1,5 @@
-from sqlalchemy.ext.declarative import declarative_base
-import app.domain.model
 from app.core.database import Base, engine
-from scripts.seed import seed_db
+from app.scripts.seed import seed_db
 
 
 def set_up():

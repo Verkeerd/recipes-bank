@@ -1,13 +1,14 @@
+import uuid
 from unittest.mock import MagicMock
 
 import pytest
-import uuid
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.core.auth import get_current_user
 from app.core.database import Base
 from app.core.services import Services
 from app.core.service_factory import get_services
@@ -20,7 +21,7 @@ from app.service.recipe_service import RecipeService
 from app.service.ingredient_service import IngredientService
 
 
-TEST_DB_URL = "sqlite:///./test.db"  # important: NOT in-memory for stability
+TEST_DB_URL = "sqlite:///./test.db"
 
 engine = create_engine(
     TEST_DB_URL,
@@ -28,6 +29,10 @@ engine = create_engine(
 )
 
 TestingSessionLocal = sessionmaker(bind=engine)
+
+
+def fake_user():
+    return MagicMock(id=uuid.uuid4(), username="testuser")
 
 
 @pytest.fixture(scope="function")
@@ -66,6 +71,7 @@ def client(services):
     def override_get_services():
         return services
 
+    app.dependency_overrides[get_current_user] = fake_user
     app.dependency_overrides[get_services] = override_get_services
 
     return TestClient(app)
@@ -86,6 +92,12 @@ def create_payload(**overrides):
     }
     base.update(overrides)
     return base
+
+
+def create_recipe_in_db(client, payload):
+    response = client.post("/recipe/", json=payload)
+    assert response.status_code == 200
+    return response.json()
 
 
 # -----------------------
@@ -125,7 +137,7 @@ def test_update_recipe_flow(client):
         },
     )
     print(update_resp.json())
-    
+
     assert update_resp.status_code == 200
     assert update_resp.json()["name"] == "New Name"
 
@@ -139,3 +151,142 @@ def test_delete_recipe_flow(client):
 
     get_resp = client.get(f"/recipe/{recipe_id}")
     assert get_resp.status_code == 404
+
+
+def test_query_recipes_returns_results(client):
+    # Arrange: create two recipes
+    create_recipe_in_db(client, create_payload(name="Pasta", vegetarian=True))
+    create_recipe_in_db(client, create_payload(name="Chicken Soup", vegetarian=False))
+
+    # Act: query vegetarian recipes
+    response = client.post(
+        "/recipe/query",
+        json={
+            "description_include": None,
+            "description_exclude": None,
+            "ingredients_include": None,
+            "ingredients_exclude": None,
+            "vegetarian": True,
+            "servings": None,
+        },
+    )
+
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["name"] == "Pasta"
+
+
+def test_query_recipes_returns_404_when_empty(client):
+    # Arrange: no recipes created
+
+    response = client.post(
+        "/recipe/query",
+        json={
+            "vegetarian": True,
+            "description_include": None,
+            "description_exclude": None,
+            "ingredients_include": None,
+            "ingredients_exclude": None,
+            "servings": None,
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No recipes with the given filters found"
+
+
+def test_query_recipes_by_servings(client):
+    create_recipe_in_db(client, create_payload(name="A", servings=2))
+    create_recipe_in_db(client, create_payload(name="B", servings=4))
+
+    response = client.post(
+        "/recipe/query",
+        json={
+            "servings": 2,
+            "vegetarian": None,
+            "description_include": None,
+            "description_exclude": None,
+            "ingredients_include": None,
+            "ingredients_exclude": None,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["servings"] == 2
+
+
+def test_query_recipes_by_ingredient_include(client):
+    create_recipe_in_db(
+        client,
+        create_payload(
+            name="Pasta",
+            ingredients=[{"name": "salt", "amount": 1, "unit": "tsp"}],
+        ),
+    )
+
+    create_recipe_in_db(
+        client,
+        create_payload(
+            name="Cake",
+            ingredients=[{"name": "sugar", "amount": 100, "unit": "g"}],
+        ),
+    )
+
+    response = client.post(
+        "/recipe/query",
+        json={
+            "ingredients_include": ["salt"],
+            "ingredients_exclude": None,
+            "vegetarian": None,
+            "servings": None,
+            "description_include": None,
+            "description_exclude": None,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["name"] == "Pasta"
+
+
+def test_query_recipes_excludes_ingredients(client):
+    create_recipe_in_db(
+        client,
+        create_payload(
+            name="Pasta",
+            ingredients=[{"name": "milk", "amount": 1, "unit": "l"}],
+        ),
+    )
+
+    create_recipe_in_db(
+        client,
+        create_payload(
+            name="Soup",
+            ingredients=[{"name": "water", "amount": 1, "unit": "l"}],
+        ),
+    )
+
+    response = client.post(
+        "/recipe/query",
+        json={
+            "ingredients_exclude": ["milk"],
+            "ingredients_include": None,
+            "vegetarian": None,
+            "servings": None,
+            "description_include": None,
+            "description_exclude": None,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert all("milk" not in str(r["ingredients"]) for r in data)

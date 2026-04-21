@@ -10,12 +10,12 @@ class IngredientService:
 
     def add_ingredients(self, ingredients):
         recipe_ingredients = list()
-
         for item in ingredients:
-            ingredient = self.ingredient_repo.get_by_name(item.name)
+            ingredient_name = item.name.lower()
+            ingredient = self.ingredient_repo.get_by_name(ingredient_name)
 
             if not ingredient:
-                ingredient = Ingredient(name=item.name, uuid=uuid.uuid4())
+                ingredient = Ingredient(name=ingredient_name, uuid=uuid.uuid4())
                 self.ingredient_repo.add(ingredient)
 
             recipe_ingredients.append(

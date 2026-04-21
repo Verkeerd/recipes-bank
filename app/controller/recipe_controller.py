@@ -1,13 +1,14 @@
-import pprint
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.auth import get_current_user
 from app.core.services import Services
 from app.core.service_factory import get_services
 
 from app.domain.schema import RecipeRequest, RecipeUpdate, RecipeResponse
 from app.domain.schema.recipe.recipe_query import RecipeQuery
+
 
 recipe_router = APIRouter(prefix="/recipe", tags=["Recipes"])
 
@@ -20,6 +21,7 @@ def get_recipes(services: Services = Depends(get_services)):
 def create_recipe(
     recipe: RecipeRequest,
     services: Services = Depends(get_services),
+    user=Depends(get_current_user)
 ):
     return RecipeResponse.from_orm_recipe(services.recipe.create_recipe(recipe))
 
@@ -40,6 +42,7 @@ def update_recipe(
     recipe_id: uuid.UUID,
     recipe: RecipeUpdate,
     services: Services = Depends(get_services),
+    user=Depends(get_current_user)
 ):
     updated = services.recipe.update_recipe(recipe_id, recipe)
 
@@ -52,6 +55,7 @@ def update_recipe(
 def delete_recipe(
     recipe_id: uuid.UUID,
     services: Services = Depends(get_services),
+    user=Depends(get_current_user)
 ):
     deleted = services.recipe.delete_recipe(recipe_id)
 
@@ -61,7 +65,7 @@ def delete_recipe(
     return {"message": "Recipe deleted successfully"}
 
 @recipe_router.post("/query", response_model=list[RecipeResponse])
-def update_recipe(
+def query_recipes(
     request: RecipeQuery,
     services: Services = Depends(get_services),
 ):
