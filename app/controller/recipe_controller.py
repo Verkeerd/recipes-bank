@@ -51,8 +51,7 @@ Required (JWT Bearer token)
 - Recipes must include at least:
   - 1 ingredient
   - 1 step
-- Steps can be sent as strings or structured objects
-- Vegetarian flag is stored at recipe level (not ingredient level)
+- Steps can be sent as strings or structured objects {step: int description: str}
 """,
     responses={
         201: {"description": "Recipe successfully created"},

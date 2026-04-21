@@ -58,7 +58,7 @@ def test_create_user_success(client, auth_service_mock):
     )
 
     # Assert
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["username"] == "jan"
 
     auth_service_mock.add_user.assert_called_once()

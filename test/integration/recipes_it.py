@@ -92,7 +92,7 @@ def create_payload(**overrides):
 
 def create_recipe_in_db(client, payload):
     response = client.post("/recipe/", json=payload)
-    assert response.status_code == 200
+    assert response.status_code == 201
     return response.json()
 
 
@@ -109,7 +109,7 @@ def test_create_and_get_recipe(client):
     # Arrange
     create_resp = client.post("/recipe/", json=create_payload())
 
-    assert create_resp.status_code == 200
+    assert create_resp.status_code == 201
 
     data = create_resp.json()
     recipe_id = data["id"]

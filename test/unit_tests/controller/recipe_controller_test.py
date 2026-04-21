@@ -103,7 +103,7 @@ def test_create_recipe(client):
     )
 
     # Assert
-    assert response.status_code == 200
+    assert response.status_code == 201
     services.recipe.create_recipe.assert_called_once()
 
 def test_get_recipe_success(client):

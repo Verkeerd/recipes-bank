@@ -24,6 +24,7 @@ Authenticate a user using **username and password** and return a JWT access toke
 - On success, returns a JWT token
 - Token must be included in protected requests:
     Authorization: Bearer <token>
+    
 ### Notes
 - Token expires after 60 minutes
 - No refresh token mechanism is implemented
