@@ -5,10 +5,12 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from fastapi import HTTPException
 
 from app.controller.auth_controller import auth_router
 from app.core.auth import get_auth_service
 from app.service.auth_service import AuthService
+
 
 
 os.environ["SECRET_AUTH_KEY"] = "test-secret"
@@ -35,6 +37,7 @@ def client(auth_service_mock):
 
 
 def test_create_user_success(client, auth_service_mock):
+    # Arrange
     fake_user = MagicMock()
     fake_user.username = "jan"
     fake_user.email = "jan@test.com"
@@ -43,6 +46,7 @@ def test_create_user_success(client, auth_service_mock):
 
     auth_service_mock.add_user.return_value = fake_user
 
+    # Act
     response = client.post(
         "/auth/create",
         json={
@@ -53,6 +57,7 @@ def test_create_user_success(client, auth_service_mock):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     assert response.json()["username"] == "jan"
 
@@ -60,13 +65,13 @@ def test_create_user_success(client, auth_service_mock):
 
 
 def test_create_user_duplicate_username(client, auth_service_mock):
-    from fastapi import HTTPException
-
+    # Arrange
     auth_service_mock.add_user.side_effect = HTTPException(
         status_code=409,
         detail="Username already exists",
     )
 
+    # Act
     response = client.post(
         "/auth/create",
         json={
@@ -77,17 +82,20 @@ def test_create_user_duplicate_username(client, auth_service_mock):
         },
     )
 
+    # Assert
     assert response.status_code == 409
     assert response.json()["detail"] == "Username already exists"
 
 
 def test_login_success(client, auth_service_mock):
+    # Arrange
     fake_user = MagicMock()
     fake_user.username = "jan"
 
     auth_service_mock.authenticate_user.return_value = fake_user
     auth_service_mock.create_access_token.return_value = "fake-jwt-token"
 
+    # Act
     response = client.post(
         "/auth/login",
         data={
@@ -96,6 +104,7 @@ def test_login_success(client, auth_service_mock):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     assert response.json()["access_token"] == "fake-jwt-token"
     assert response.json()["token_type"] == "bearer"
@@ -106,8 +115,10 @@ def test_login_success(client, auth_service_mock):
 
 
 def test_login_invalid_credentials(client, auth_service_mock):
+    # Arrange
     auth_service_mock.authenticate_user.return_value = None
 
+    #Act
     response = client.post(
         "/auth/login",
         data={
@@ -116,17 +127,20 @@ def test_login_invalid_credentials(client, auth_service_mock):
         },
     )
 
+    # Assert
     assert response.status_code == 401
     assert response.json()["detail"] == "Incorrect username or password"
 
 
 def test_login_calls_token_creation(client, auth_service_mock):
+    # Arrange
     fake_user = MagicMock()
     fake_user.username = "jan"
 
     auth_service_mock.authenticate_user.return_value = fake_user
     auth_service_mock.create_access_token.return_value = "jwt-token"
 
+    #Act
     client.post(
         "/auth/login",
         data={
@@ -135,6 +149,7 @@ def test_login_calls_token_creation(client, auth_service_mock):
         },
     )
 
+    # Assert
     auth_service_mock.create_access_token.assert_called_once()
 
     _, kwargs = auth_service_mock.create_access_token.call_args

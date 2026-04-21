@@ -77,10 +77,6 @@ def client(services):
     return TestClient(app)
 
 
-# -----------------------
-# TEST HELPERS
-# -----------------------
-
 def create_payload(**overrides):
     base = {
         "name": "Pasta",
@@ -100,18 +96,17 @@ def create_recipe_in_db(client, payload):
     return response.json()
 
 
-# -----------------------
-# TESTS
-# -----------------------
-
 def test_get_recipes_empty(client):
+    # Arrange
     response = client.get("/recipe/")
 
+    # Assert
     assert response.status_code == 200
     assert response.json() == []
 
 
 def test_create_and_get_recipe(client):
+    # Arrange
     create_resp = client.post("/recipe/", json=create_payload())
 
     assert create_resp.status_code == 200
@@ -119,16 +114,20 @@ def test_create_and_get_recipe(client):
     data = create_resp.json()
     recipe_id = data["id"]
 
+    # Act
     get_resp = client.get(f"/recipe/{recipe_id}")
 
+    # Assert
     assert get_resp.status_code == 200
     assert get_resp.json()["name"] == "Pasta"
 
 
 def test_update_recipe_flow(client):
+    # Arrange
     create_resp = client.post("/recipe/", json=create_payload(name="Old"))
     recipe_id = create_resp.json()["id"]
 
+    # Act
     update_resp = client.put(
         f"/recipe/{recipe_id}",
         json={
@@ -136,8 +135,8 @@ def test_update_recipe_flow(client):
             "vegetarian": False,
         },
     )
-    print(update_resp.json())
 
+    # Assert
     assert update_resp.status_code == 200
     assert update_resp.json()["name"] == "New Name"
 
@@ -154,11 +153,11 @@ def test_delete_recipe_flow(client):
 
 
 def test_query_recipes_returns_results(client):
-    # Arrange: create two recipes
+    # Arrange
     create_recipe_in_db(client, create_payload(name="Pasta", vegetarian=True))
     create_recipe_in_db(client, create_payload(name="Chicken Soup", vegetarian=False))
 
-    # Act: query vegetarian recipes
+    # Act
     response = client.post(
         "/recipe/query",
         json={
@@ -180,8 +179,7 @@ def test_query_recipes_returns_results(client):
 
 
 def test_query_recipes_returns_404_when_empty(client):
-    # Arrange: no recipes created
-
+    # Act
     response = client.post(
         "/recipe/query",
         json={
@@ -194,14 +192,17 @@ def test_query_recipes_returns_404_when_empty(client):
         },
     )
 
+    # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == "No recipes with the given filters found"
 
 
 def test_query_recipes_by_servings(client):
+    # Arrange
     create_recipe_in_db(client, create_payload(name="A", servings=2))
     create_recipe_in_db(client, create_payload(name="B", servings=4))
 
+    # Act
     response = client.post(
         "/recipe/query",
         json={
@@ -214,6 +215,7 @@ def test_query_recipes_by_servings(client):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     data = response.json()
 
@@ -222,6 +224,7 @@ def test_query_recipes_by_servings(client):
 
 
 def test_query_recipes_by_ingredient_include(client):
+    # Arrange
     create_recipe_in_db(
         client,
         create_payload(
@@ -238,6 +241,7 @@ def test_query_recipes_by_ingredient_include(client):
         ),
     )
 
+    # Act
     response = client.post(
         "/recipe/query",
         json={
@@ -250,6 +254,7 @@ def test_query_recipes_by_ingredient_include(client):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     data = response.json()
 
@@ -258,6 +263,7 @@ def test_query_recipes_by_ingredient_include(client):
 
 
 def test_query_recipes_excludes_ingredients(client):
+    # Arrange
     create_recipe_in_db(
         client,
         create_payload(
@@ -274,6 +280,7 @@ def test_query_recipes_excludes_ingredients(client):
         ),
     )
 
+    # Act
     response = client.post(
         "/recipe/query",
         json={
@@ -286,6 +293,7 @@ def test_query_recipes_excludes_ingredients(client):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     data = response.json()
 

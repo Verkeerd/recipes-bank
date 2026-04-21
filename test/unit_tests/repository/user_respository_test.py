@@ -5,6 +5,13 @@ from sqlalchemy.exc import IntegrityError
 from app.repository.user_repository import UserRepository
 from app.domain.model.user import User
 
+
+class FakeIntegrityError(IntegrityError):
+    def __init__(self, origin):
+        super().__init__("stmt", "params", None)
+        self.orig = origin
+        
+        
 def test_get_by_id_returns_user():
     db = MagicMock()
 
@@ -24,21 +31,21 @@ def test_get_by_username_returns_user():
 
     query = db.query.return_value
     options = query.options.return_value
-    options.filter.return_value.first.return_value = User(username="john")
+    options.filter.return_value.first.return_value = User(username="jan")
 
     repo = UserRepository(db)
 
-    result = repo.get_by_username("john")
+    result = repo.get_by_username("jan")
 
     db.query.assert_called_once()
     query.options.assert_called_once()
     options.filter.assert_called_once()
 
-    assert result.username == "john"
+    assert result.username == "jan"
 
 def test_save_user_success():
     db = MagicMock()
-    user = User(username="john")
+    user = User(username="jan")
 
     repo = UserRepository(db)
 
@@ -53,7 +60,7 @@ def test_save_user_success():
 def test_save_user_integrity_error():
     db = MagicMock()
 
-    user = User(username="john")
+    user = User(username="jan")
 
     db.commit.side_effect = IntegrityError("stmt", "params", "orig")
 
@@ -68,14 +75,9 @@ def test_save_user_integrity_error():
 def test_save_user_duplicate_username():
     db = MagicMock()
 
-    user = User(username="john")
+    user = User(username="jan")
 
-    class FakeIntegrityError(IntegrityError):
-        def __init__(self):
-            super().__init__("stmt", "params", None)
-            self.orig = "user_username_key"
-
-    db.commit.side_effect = FakeIntegrityError()
+    db.commit.side_effect = FakeIntegrityError("user_username_key")
 
     repo = UserRepository(db)
 
@@ -89,16 +91,12 @@ def test_save_user_duplicate_username():
     db.commit.assert_called_once()
 
 def test_save_user_duplicate_email():
+    # Arrange
     db = MagicMock()
 
-    user = User(username="john", email="john@test.com")
+    user = User(username="jan", email="jan@test.com")
 
-    class FakeIntegrityError(IntegrityError):
-        def __init__(self):
-            super().__init__("stmt", "params", None)
-            self.orig = "user_email_key"
-
-    db.commit.side_effect = FakeIntegrityError()
+    db.commit.side_effect = FakeIntegrityError("user_email_key")
 
     repo = UserRepository(db)
 

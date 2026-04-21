@@ -59,6 +59,7 @@ def client():
     return TestClient(app), fake_services
 
 def test_get_recipes(client):
+    # Arrange
     client, services = client
 
     recipe1 = create_pasta_recipe()
@@ -74,17 +75,21 @@ def test_get_recipes(client):
 
     services.recipe.get_all_recipes.return_value = [recipe1, recipe2]
 
+    # Act
     response = client.get("/recipe/")
 
+    # Assert
     assert response.status_code == 200
     services.recipe.get_all_recipes.assert_called_once()
 
 
 def test_create_recipe(client):
+    # Arrange
     client, services = client
 
     services.recipe.create_recipe.return_value = create_pasta_recipe()
 
+    # Act
     response = client.post(
         "/recipe/",
         json={
@@ -97,34 +102,43 @@ def test_create_recipe(client):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     services.recipe.create_recipe.assert_called_once()
 
 def test_get_recipe_success(client):
+    # Arrange
     client, services = client
 
     services.recipe.get_recipe.return_value = create_pasta_recipe()
 
+    # Act
     response = client.get(f"/recipe/{uuid.uuid4()}")
 
+    # Assert
     assert response.status_code == 200
     services.recipe.get_recipe.assert_called_once()
 
 def test_get_recipe_not_found(client):
+    # Arrange
     client, services = client
 
     services.recipe.get_recipe.return_value = None
 
+    # Act
     response = client.get(f"/recipe/{uuid.uuid4()}")
 
+    # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == "Recipe not found"
 
 def test_update_recipe_success(client):
+    # Arrange
     client, services = client
 
     services.recipe.update_recipe.return_value = create_pasta_recipe()
 
+    # Act
     response = client.put(
         f"/recipe/{uuid.uuid4()}",
         json={
@@ -136,14 +150,17 @@ def test_update_recipe_success(client):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     services.recipe.update_recipe.assert_called_once()
 
 def test_update_recipe_not_found(client):
+    # Arrange
     client, services = client
 
     services.recipe.update_recipe.return_value = None
 
+    # Act
     response = client.put(
         f"/recipe/{uuid.uuid4()}",
         json={
@@ -151,31 +168,39 @@ def test_update_recipe_not_found(client):
         },
     )
 
+    # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == "Recipe not found"
 
 def test_delete_recipe_success(client):
+    # Arrange
     client, services = client
 
     services.recipe.delete_recipe.return_value = True
 
+    # Act
     response = client.delete(f"/recipe/{uuid.uuid4()}")
 
+    # Assert
     assert response.status_code == 200
     assert response.json() == {"message": "Recipe deleted successfully"}
 
 def test_delete_recipe_not_found(client):
+    # Arrange
     client, services = client
 
     services.recipe.delete_recipe.return_value = False
 
+    # Act
     response = client.delete(f"/recipe/{uuid.uuid4()}")
 
+    # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == "Recipe not found"
 
 
 def test_query_recipes_success(client):
+    # Arrange
     client, services = client
 
     recipe1 = create_pasta_recipe()
@@ -184,6 +209,7 @@ def test_query_recipes_success(client):
 
     services.recipe.query_recipe.return_value = [recipe1, recipe2]
 
+    # Act
     response = client.post(
         "/recipe/query",
         json={
@@ -196,14 +222,17 @@ def test_query_recipes_success(client):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     services.recipe.query_recipe.assert_called_once()
 
 
 def test_query_recipes_not_found(client):
+    # Arrange
     client, services = client
     services.recipe.query_recipe.return_value = []
 
+    # Act
     response = client.post(
         "/recipe/query",
         json={
@@ -216,11 +245,13 @@ def test_query_recipes_not_found(client):
         },
     )
 
+    # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == "No recipes with the given filters found"
 
 
 def test_query_recipes_passes_request_to_service(client):
+    # Arrange
     client, services = client
 
     services.recipe.query_recipe.return_value = [create_pasta_recipe()]
@@ -234,11 +265,12 @@ def test_query_recipes_passes_request_to_service(client):
         "servings": 2,
     }
 
+    # Act
     response = client.post("/recipe/query", json=payload)
 
+    # Assert
     assert response.status_code == 200
 
-    # ensure request object was passed
     args, _ = services.recipe.query_recipe.call_args
     request = args[0]
 
@@ -246,11 +278,13 @@ def test_query_recipes_passes_request_to_service(client):
     assert request.servings == 2
 
 def test_query_recipes_does_not_modify_response(client):
+    # Arrange
     client, services = client
 
     recipe = create_pasta_recipe()
     services.recipe.query_recipe.return_value = [recipe]
 
+    # Act
     response = client.post(
         "/recipe/query",
         json={
@@ -263,5 +297,6 @@ def test_query_recipes_does_not_modify_response(client):
         },
     )
 
+    # Assert
     assert response.status_code == 200
     services.recipe.query_recipe.assert_called_once()
