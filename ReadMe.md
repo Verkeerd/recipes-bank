@@ -1,7 +1,8 @@
 # Recipe API
 
 A FastAPI-based backend for creating, updating, deleting and searching recipes.
-The project uses a **layered architecture (controller → service → repository → domain)** with PostgreSQL, SQLAlchemy, and Docker.
+The project uses a **layered architecture (controller → service → repository → domain)** with PostgreSQL, SQLAlchemy, 
+and Docker.
 
 ---
 
@@ -116,10 +117,10 @@ Authentication lays the groundwork for **auditability**:
 Rename `.env.example` to `.env` or create a `.env` file in the project root:
 
 ```env
-DB_NAME=postgres_db
-DB_USER=postgres_user
-DB_PASSWORD=prostgres_pasword
-DB_HOST=postgres_host
+DB_NAME=${postgres_db}
+DB_USER=${postgres_user}
+DB_PASSWORD=${prostgres_pasword}
+DB_HOST=db
 DB_PORT=5432
 
 SECRET_AUTH_KEY=your_generated_secret
@@ -133,7 +134,8 @@ openssl rand -hex 32
 
 > `SECRET_AUTH_KEY` is used to sign JWT tokens and must be kept secret.
 
-Set the database name, username and password and secret auth key.
+Set the database name, username and password and secret auth key. 
+Note that `DB_HOST` needs to be set to exactly db and `DB_PORT` needs to be set to exactly 5432.
 
 ```env
 DB_USER=recipemaster
@@ -178,12 +180,6 @@ http://localhost:8000/docs
 pip install -r requirements.txt
 ```
 
-or (with uv):
-
-```bash
-uv sync
-```
-
 ---
 
 ### 2. Start PostgreSQL locally
@@ -210,11 +206,11 @@ ALTER DATABASE recipebank OWNER TO recipemaster;
 Rename `.env.example` to `.env` or create a `.env` file in the project root:
 
 ```env
-DB_NAME=postgres_db
-DB_USER=postgres_user
-DB_PASSWORD=prostgres_pasword
-DB_HOST=postgres_host
-DB_PORT=5432
+DB_NAME=${postgres_db}
+DB_USER=${postgres_user}
+DB_PASSWORD=${prostgres_pasword}
+DB_HOST=${postgres_host_ip}
+DB_PORT=${prostgres_port}
 
 SECRET_AUTH_KEY=your_generated_secret
 ```
@@ -257,7 +253,7 @@ uvicorn app.main:app --reload
 
 ---
 
-# 🔐 Authentication
+# Authentication
 
 ## Create user
 
@@ -287,7 +283,7 @@ POST /auth/login
 Form data (OAuth2):
 
 ```
-username=john
+username=jan
 password=secret
 ```
 
@@ -426,36 +422,19 @@ alembic revision --autogenerate -m "message"
 
 ---
 
-# 🐳 Docker Notes
-
-## Services
-
-### db
-
-* PostgreSQL 16
-* Persistent volume: `pgdata`
-
-### api
-
-* FastAPI app
-* Depends on `db`
-* Runs:
-
-```bash
-python -m app.scripts.set_up
-uvicorn app.main:app --reload
-```
-
 ---
 
 # 🔧 Environment Variables
 
-| Variable     | Description                  |
-| ------------ | ---------------------------- |
-| DB_USER      | Postgres user                |
-| DB_PASSWORD  | Postgres password            |
-| DB_NAME      | Database name                |
-| DATABASE_URL | SQLAlchemy connection string |
+| Variable         | Description                  |
+|------------------|------------------------------|
+| DB_USER          | Postgres user                |
+| DB_PASSWORD      | Postgres password            |
+| DB_NAME          | Database name                |
+| DATABASE_URL     | SQLAlchemy connection string |
+| SECRET_AUT_TOKEN | Used for jwt generation      |
+
+---
 
 ---
 
