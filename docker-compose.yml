@@ -3,12 +3,11 @@ version: "3.9"
 services:
   db:
     image: postgres:16
-    container_name: recipe-db
     restart: always
     environment:
-      POSTGRES_USER: recipe_user
-      POSTGRES_PASSWORD: recipe_pass
-      POSTGRES_DB: recipe_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -16,7 +15,6 @@ services:
 
   api:
     build: .
-    container_name: recipe-api
     depends_on:
       - db
     environment:
@@ -26,7 +24,7 @@ services:
     volumes:
       - .:/app
     command: >
-      sh -c "python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+      sh -c "python -m app.scripts.set_up && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 volumes:
   pgdata:
