@@ -6,6 +6,7 @@ from app.domain.schema import IngredientSchema, StepSchema
 
 
 class RecipeResponse(BaseModel):
+    """Schema for a recipe response."""
     id: uuid.UUID
     name: str
     description: str

@@ -5,9 +5,9 @@ from app.domain.schema.step_schema import StepRequest
 
 
 class RecipeRequest(BaseModel):
-    """All data necessary to create a new Recipe."""
+    """Schema with data to create a new Recipe with validators."""
     name: str = Field(min_length=1, max_length=50)
-    description: str | None
+    description: str | None = Field(default=None, min_length=1, max_length=256)
     ingredients: list[IngredientSchema]
     steps: list[StepRequest]
     vegetarian: bool

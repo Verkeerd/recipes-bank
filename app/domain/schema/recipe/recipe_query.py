@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class RecipeQuery(BaseModel):
-    """"""
+    """Schema containing all data a recipe can be queried with. """
     description_include: Optional[list[str]]
     description_exclude: Optional[list[str]]
     ingredients_include: Optional[list[str]]

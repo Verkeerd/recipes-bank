@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class UserResponse(BaseModel):
+    """Schema for a user response."""
     id: uuid.UUID
     username: str
     email: str

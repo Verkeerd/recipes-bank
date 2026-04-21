@@ -6,6 +6,7 @@ from app.domain.schema.step_schema import StepRequest
 
 
 class RecipeUpdate(BaseModel):
+    """Schema with information to update a recipe with validators."""
     name: Optional[str] = Field(default=None, min_length=1, max_length=50)
     description: Optional[str] = Field(default=None, min_length=1, max_length=256)
     ingredients: Optional[list[IngredientSchema]] = None

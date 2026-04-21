@@ -1,23 +1,14 @@
 import os
-import uuid
 import pytest
 from unittest.mock import MagicMock
-
-from fastapi import HTTPException
 
 from app.service.auth_service import AuthService
 from app.domain.schema.user_request import UserRequest
 
 
-# -----------------------
-# FIX ENV (IMPORTANT)
-# -----------------------
 os.environ["SECRET_AUTH_KEY"] = "test-secret"
 
 
-# -----------------------
-# FIXTURES
-# -----------------------
 @pytest.fixture
 def user_repo():
     repo = MagicMock()
