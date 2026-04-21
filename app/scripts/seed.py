@@ -19,8 +19,6 @@ def seed_db():
             ingredient_service
         )
 
-        userService
-
         pancakes = RecipeRequest(
             name="Fluffy Pancakes",
             description="Soft homemade pancakes",
